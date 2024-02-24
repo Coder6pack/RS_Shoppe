@@ -55,6 +55,7 @@ export const getRules = (getValues?: UseFormGetValues<any>): Rules => ({
   }
 })
 
+//dung yup de khai bao cac rule cua register
 export const schema = yup
   .object({
     email: yup
