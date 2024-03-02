@@ -1,11 +1,15 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
 import { omit } from 'lodash'
+import { useContext } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { registerAccount } from 'src/apis/auth.api'
+import Button from 'src/components/Button'
 import Input from 'src/components/Input'
-import { ResponseApi } from 'src/types/ultils.type'
+import path from 'src/constants/path'
+import { AppContext } from 'src/contexts/app.context'
+import { ErrorResponse } from 'src/types/ultils.type'
 import { schema, Schema } from 'src/utils/rules'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 
@@ -23,6 +27,11 @@ export default function Register() {
   const registerAccountMutation = useMutation({
     mutationFn: (body: Omit<FormData, 'confirm_password'>) => registerAccount(body)
   })
+  // Goi useContext cua Authenticated
+  const { setIsAuthenticated, setProfile } = useContext(AppContext)
+
+  // Khai bao navigate
+  const navigate = useNavigate()
   const onSubmit = handleSubmit((data) => {
     // dung lodash de omit 'confirm_password' han che gui tat ca key len server
     const body = omit(data, ['confirm_password'])
@@ -30,12 +39,14 @@ export default function Register() {
     // goi ham de mutate data trong form register
     registerAccountMutation.mutate(body, {
       onSuccess: (data) => {
-        console.log(data)
+        setIsAuthenticated(true)
+        setProfile(data.data.data.user)
+        navigate(path.home)
       },
 
       // handle loi 422
       onError: (error) => {
-        if (isAxiosUnprocessableEntityError<ResponseApi<Omit<FormData, 'confirm_password'>>>(error)) {
+        if (isAxiosUnprocessableEntityError<ErrorResponse<Omit<FormData, 'confirm_password'>>>(error)) {
           const formError = error.response?.data.data
 
           if (formError) {
@@ -85,16 +96,18 @@ export default function Register() {
                 autoComplete='on'
               />
               <div className='mt-2'>
-                <button
+                <Button
                   type='submit'
-                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600'
+                  className='w-full  py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 flex justify-center items-center'
+                  isLoading={registerAccountMutation.isPending}
+                  disabled={registerAccountMutation.isPending}
                 >
                   Đăng Ký
-                </button>
+                </Button>
               </div>
               <div className='flex items-center mt-8 justify-center'>
                 <span className='text-gray-400'>Bạn đã có tài khoản?</span>
-                <Link className='ml-2 text-orange' to={'/login'}>
+                <Link className='ml-2 text-orange' to={path.login}>
                   Đăng nhập
                 </Link>
               </div>

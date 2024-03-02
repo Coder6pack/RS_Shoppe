@@ -1,8 +1,8 @@
-import { ResponseApi } from './ultils.type'
+import { SuccessResponse } from './ultils.type'
 import { User } from './user.typ'
 
 // tao kieu du lieu de server tra auth ve
-export type AuthResponse = ResponseApi<{
+export type AuthResponse = SuccessResponse<{
   access_token: string
   expires: string
   user: User
