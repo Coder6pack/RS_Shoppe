@@ -21,7 +21,7 @@ export interface Product {
 
 export interface ProductList {
   products: Product[]
-  paginate: {
+  pagination: {
     page: number
     limit: number
     page_size: number
@@ -29,13 +29,17 @@ export interface ProductList {
 }
 
 export interface ProductListConfig {
-  page?: number
-  limit?: number
+  page?: number | string
+  limit?: number | string
   sort_by?: typeof sortBy
   order?: typeof order
   exclude?: string
-  rating_filter?: number
-  price_min?: number
-  price_max?: number
+  rating_filter?: number | string
+  price_min?: number | string
+  price_max?: number | string
   name?: string
+}
+
+export type QueryConfig = {
+  [key in keyof ProductListConfig]: string
 }

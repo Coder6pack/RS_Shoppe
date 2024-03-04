@@ -1,18 +1,33 @@
-import React, { useState } from 'react'
 import SortProductList from './components/SortProductList'
 import Product from './components/Product'
 import AsideFilter from './components/AsideFilter'
 import useQueryParam from 'src/hooks/useQueryParam'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import productApi from 'src/apis/product.api'
 import Pagination from 'src/components/Pagination'
+import { ProductListConfig, QueryConfig } from 'src/types/product.type'
+import { isUndefined, omitBy } from 'lodash'
 
 export default function ProductList() {
-  const queryParams = useQueryParam()
-  const [page, setPage] = useState(1)
+  const queryParams: QueryConfig = useQueryParam()
+  const queryConfig: QueryConfig = omitBy(
+    {
+      page: queryParams.page || '1',
+      limit: queryParams.limit,
+      sort_by: queryParams.sort_by,
+      order: queryParams.order,
+      exclude: queryParams.exclude,
+      rating_filter: queryParams.rating_filter,
+      price_min: queryParams.price_min,
+      price_max: queryParams.price_max,
+      name: queryParams.name
+    },
+    isUndefined
+  )
   const { data } = useQuery({
-    queryKey: ['products', queryParams],
-    queryFn: () => productApi.getProducts(queryParams)
+    queryKey: ['products', queryConfig],
+    queryFn: () => productApi.getProducts(queryConfig as ProductListConfig),
+    placeholderData: keepPreviousData
   })
   return (
     <div className='bg-gray-200 py-6'>
@@ -21,13 +36,17 @@ export default function ProductList() {
           <div className='col-span-3'>
             <AsideFilter />
           </div>
-          <div className='col-span-9'>
-            <SortProductList />
-            <div className='mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'>
-              {data && data.data.data.products.map((product) => <Product key={product._id} product={product} />)}
+          {data && (
+            <div className='col-span-9'>
+              <SortProductList />
+              <div className='mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'>
+                {data.data.data.products.map((product) => (
+                  <Product key={product._id} product={product} />
+                ))}
+              </div>
+              <Pagination queryConfig={queryConfig} pageSize={data.data.data.pagination.page_size} />
             </div>
-            <Pagination page={page} setPage={setPage} pageSize={20} />
-          </div>
+          )}
         </div>
       </div>
     </div>
