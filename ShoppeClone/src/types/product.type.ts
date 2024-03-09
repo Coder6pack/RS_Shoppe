@@ -1,10 +1,9 @@
-import { order, sortBy } from './../constants/product'
-
 export interface Product {
   _id: string
   images: string[]
   price: number
   rating: number
+  description: string
   price_before_discount: number
   quantity: number
   sold: number
@@ -31,13 +30,14 @@ export interface ProductList {
 export interface ProductListConfig {
   page?: number | string
   limit?: number | string
-  sort_by?: typeof sortBy
-  order?: typeof order
+  sort_by?: string
+  order?: string
   exclude?: string
   rating_filter?: number | string
   price_min?: number | string
   price_max?: number | string
   name?: string
+  category?: string
 }
 
 export type QueryConfig = {

@@ -41,6 +41,8 @@ export default function Pagination({ queryConfig, pageSize }: Props) {
       .fill(0)
       .map((_, index) => {
         const pageNumber = index + 1
+
+        // Xủ lý dấu ... theo logic
         if (page <= RANGE * 2 + 1 && pageNumber > page + RANGE && pageNumber < pageSize - RANGE + 1) {
           return renderDotAfter(index)
         } else if (page > RANGE * 2 + 1 && page < pageSize - RANGE * 2) {
@@ -59,6 +61,7 @@ export default function Pagination({ queryConfig, pageSize }: Props) {
               search: createSearchParams({ ...queryConfig, page: pageNumber.toString() }).toString()
             }}
             key={index}
+            // Check active bằng package classnames
             className={classNames('bg-white rounded px-3 py-2 shadow-sm mx-2 cursor-pointer border', {
               'border-cyan-500': pageNumber === page,
               'border-transparent': pageNumber !== page
@@ -77,6 +80,7 @@ export default function Pagination({ queryConfig, pageSize }: Props) {
         <Link
           to={{
             pathname: path.home,
+            // Lấy và thay đổi giá trị page bằng việc overdrive page của queryConfig
             search: createSearchParams({ ...queryConfig, page: (page - 1).toString() }).toString()
           }}
           className='bg-white rounded px-3 py-2 shadow-sm mx-2 cursor-pointer border'

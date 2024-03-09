@@ -1,13 +1,64 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { yupResolver } from '@hookform/resolvers/yup'
+import classNames from 'classnames'
+import { useForm, Controller } from 'react-hook-form'
+import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import Button from 'src/components/Button'
-import Input from 'src/components/Input'
+import InputNumber from 'src/components/InputNumber'
 import path from 'src/constants/path'
+import { Category } from 'src/types/category.type'
+import { QueryConfig } from 'src/types/product.type'
+import { NoUndefinedField } from 'src/types/ultils.type'
+import { Schema, schema } from 'src/utils/rules'
+import { ObjectSchema } from 'yup'
+import RatingStart from '../RatingStart'
+import { omit } from 'lodash'
+interface Props {
+  categories: Category[]
+  queryConfig: QueryConfig
+}
 
-export default function AsideFilter() {
+type FormData = NoUndefinedField<Pick<Schema, 'price_min' | 'price_max'>>
+
+const priceSchema = schema.pick(['price_min', 'price_max'])
+export default function AsideFilter({ categories, queryConfig }: Props) {
+  const { category } = queryConfig
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors }
+  } = useForm<FormData>({
+    defaultValues: {
+      price_max: '',
+      price_min: ''
+    },
+    resolver: yupResolver<FormData>(priceSchema as ObjectSchema<FormData>),
+    shouldFocusError: false
+  })
+  const navigate = useNavigate()
+  const onSubmit = handleSubmit((data) =>
+    navigate({
+      pathname: path.home,
+      search: createSearchParams({ ...queryConfig, price_max: data.price_max, price_min: data.price_min }).toString()
+    })
+  )
+  const handleRemoveAll = () => {
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(
+        omit({ ...queryConfig }, ['category', 'price_max', 'price_min', 'rating_filter'])
+      ).toString()
+    })
+  }
+
   return (
     <div className='py-4'>
-      <Link to={path.home} className='flex items-center font-bold'>
+      <Link
+        to={path.home}
+        className={classNames('flex items-center font-bold', {
+          'text-orange font-semibold': !category
+        })}
+      >
         <svg
           xmlns='http://www.w3.org/2000/svg'
           fill='none'
@@ -26,26 +77,37 @@ export default function AsideFilter() {
       </Link>
       <div className='bg-gray-300 h-[1px] my-4' />
       <ul>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2 text-orange font-semibold'>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-              strokeWidth={1.5}
-              stroke='currentColor'
-              className='w-4 h-4 fill-orange absolute left-[-10px]'
-            >
-              <path strokeLinecap='round' strokeLinejoin='round' d='m8.25 4.5 7.5 7.5-7.5 7.5' />
-            </svg>
-            Thời trang nam
-          </Link>
-        </li>
-        <li className='py-2 pl-3'>
-          <Link to={path.home} className='relative px-2'>
-            Phone Call
-          </Link>
-        </li>
+        {categories.map((item) => {
+          const isActive = category === item._id
+          return (
+            <li key={item._id} className='py-2 pl-2'>
+              <Link
+                key={item._id}
+                to={{
+                  pathname: path.home,
+                  search: createSearchParams({ ...queryConfig, category: item._id }).toString()
+                }}
+                className={classNames('relative px-2', {
+                  'text-orange font-semibold': isActive
+                })}
+              >
+                {isActive && (
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-4 h-4 fill-orange absolute left-[-10px]'
+                  >
+                    <path strokeLinecap='round' strokeLinejoin='round' d='m8.25 4.5 7.5 7.5-7.5 7.5' />
+                  </svg>
+                )}
+                {item.name}
+              </Link>
+            </li>
+          )
+        })}
       </ul>
       <div className='flex items-center font-semibold mt-4 uppercase'>
         <svg
@@ -67,102 +129,66 @@ export default function AsideFilter() {
       <div className='bg-gray-300 h-[1px] my-4' />
       <div className='my-5'>
         <div className=''>Khoảng giá</div>
-        <form className='mt-2'>
+        <form className='mt-2' onSubmit={onSubmit}>
           <div className='flex items-start'>
-            <Input
-              type='text'
-              className='grow'
-              name='form'
-              placeholder='Từ'
-              classNameInput='p-1 rounded-sm border border-gray-300 focus:border-gray-500 focus:shadow-sm w-full outline-none'
+            <Controller
+              control={control}
+              name='price_min'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    placeholder='Từ'
+                    classNameError='hidden'
+                    classNameInput='p-1 rounded-sm border border-gray-300 focus:border-gray-500 focus:shadow-sm w-full outline-none'
+                    onChange={(event) => {
+                      field.onChange(event)
+                      trigger('price_max')
+                    }}
+                    value={field.value}
+                    ref={field.ref}
+                  />
+                )
+              }}
             />
+
             <div className='mx-2 mt-2 shrink-0'>-</div>
-            <Input
-              type='text'
-              className='grow'
-              name='form'
-              placeholder='Đến'
-              classNameInput='p-1 rounded-sm border border-gray-300 focus:border-gray-500 focus:shadow-sm w-full outline-none'
+            <Controller
+              control={control}
+              name='price_max'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    placeholder='Đến'
+                    classNameError='hidden'
+                    classNameInput='p-1 rounded-sm border border-gray-300 focus:border-gray-500 focus:shadow-sm w-full outline-none'
+                    onChange={(event) => {
+                      field.onChange(event)
+                      trigger('price_min')
+                    }}
+                    value={field.value}
+                    ref={field.ref}
+                  />
+                )
+              }}
             />
           </div>
+          <div className='mt-2 min-h-[1rem] text-sm text-red-600 '>{errors.price_min?.message}</div>
           <Button className='w-full p-2 uppercase bg-orange text-white hover:bg-orange/90 flex items-center justify-center'>
             Áp dụng
           </Button>
         </form>
         <div className='bg-gray-300 h-[1px] my-4' />
         <div>Đánh giá</div>
-        <ul className='my-3'>
-          <li className='py-1 pl-4'>
-            <Link to='' className='flex items-center'>
-              {Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <svg key={index} viewBox='0 0 9.5 8' className='w-4 h-4 mr-1'>
-                    <defs>
-                      <linearGradient id='ratingStarGradient' x1='50%' x2='50%' y1='0%' y2='100%'>
-                        <stop offset='0' stopColor='#ffca11'></stop>
-                        <stop offset='1' stopColor='#ffad27'></stop>
-                      </linearGradient>
-                      <polygon
-                        id='ratingStar'
-                        points='14.910357 6.35294118 12.4209136 7.66171903 12.896355 4.88968305 10.8823529 2.92651626 13.6656353 2.52208166 14.910357 0 16.1550787 2.52208166 18.9383611 2.92651626 16.924359 4.88968305 17.3998004 7.66171903'
-                      ></polygon>
-                    </defs>
-                    <g fill='url(#ratingStarGradient)' fillRule='evenodd' stroke='none' strokeWidth='1'>
-                      <g transform='translate(-876 -1270)'>
-                        <g transform='translate(155 992)'>
-                          <g transform='translate(600 29)'>
-                            <g transform='translate(10 239)'>
-                              <g transform='translate(101 10)'>
-                                <use stroke='#ffa727' strokeWidth='.5' xlinkHref='#ratingStar'></use>
-                              </g>
-                            </g>
-                          </g>
-                        </g>
-                      </g>
-                    </g>
-                  </svg>
-                ))}
-              <span className='ml-1'>Trở lên</span>
-            </Link>
-          </li>
-          <li className='py-1 pl-4'>
-            <Link to='' className='flex items-center'>
-              {Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <svg key={index} viewBox='0 0 9.5 8' className='w-4 h-4 mr-1'>
-                    <defs>
-                      <linearGradient id='ratingStarGradient' x1='50%' x2='50%' y1='0%' y2='100%'>
-                        <stop offset='0' stopColor='#ffca11'></stop>
-                        <stop offset='1' stopColor='#ffad27'></stop>
-                      </linearGradient>
-                      <polygon
-                        id='ratingStar'
-                        points='14.910357 6.35294118 12.4209136 7.66171903 12.896355 4.88968305 10.8823529 2.92651626 13.6656353 2.52208166 14.910357 0 16.1550787 2.52208166 18.9383611 2.92651626 16.924359 4.88968305 17.3998004 7.66171903'
-                      ></polygon>
-                    </defs>
-                    <g fill='url(#ratingStarGradient)' fillRule='evenodd' stroke='none' strokeWidth='1'>
-                      <g transform='translate(-876 -1270)'>
-                        <g transform='translate(155 992)'>
-                          <g transform='translate(600 29)'>
-                            <g transform='translate(10 239)'>
-                              <g transform='translate(101 10)'>
-                                <use stroke='#ffa727' strokeWidth='.5' xlinkHref='#ratingStar'></use>
-                              </g>
-                            </g>
-                          </g>
-                        </g>
-                      </g>
-                    </g>
-                  </svg>
-                ))}
-              <span className='ml-1'>Trở lên</span>
-            </Link>
-          </li>
-        </ul>
+        <RatingStart queryConfig={queryConfig} />
         <div className='bg-gray-300 h-[1px] my-4' />
-        <Button className='w-full p-2 uppercase bg-orange text-white hover:bg-orange/90 flex items-center justify-center'>
+        <Button
+          onClick={() => handleRemoveAll()}
+          className='w-full p-2 uppercase bg-orange text-white hover:bg-orange/90 flex items-center justify-center'
+        >
           xoá tất cả
         </Button>
       </div>
