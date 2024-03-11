@@ -2,7 +2,7 @@ import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import Popover from '../Popover'
 import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
 import Button from '../Button'
 import path from 'src/constants/path'
@@ -11,7 +11,10 @@ import { useForm } from 'react-hook-form'
 import { Schema, schema } from 'src/utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { omit } from 'lodash'
-
+import purchaseApi from 'src/apis/purchase.api'
+import noproduct from 'src/assets/images/no-product.png'
+import { formatCurrency } from 'src/utils/utils'
+import { purchasesStatus } from 'src/constants/purchase'
 type FormData = Pick<Schema, 'name'>
 
 const nameSchema = schema.pick(['name'])
@@ -33,6 +36,13 @@ export default function Header() {
     },
     resolver: yupResolver(nameSchema)
   })
+
+  // get data of purchase when add to cart
+  const { data: purchasesInCartData } = useQuery({
+    queryKey: ['purchases', { status: purchasesStatus.inCart }],
+    queryFn: () => purchaseApi.getPurchases({ status: purchasesStatus.inCart })
+  })
+  const purchasesInCart = purchasesInCartData?.data.data
   const handleLogout = () => {
     logoutMutation.mutate()
   }
@@ -170,96 +180,53 @@ export default function Header() {
               placement='bottom-end'
               renderPopover={
                 <div className='bg-white relative shadow-md text-lg rounded-sm border border-gray-200 max-w-[400px]'>
-                  <div className='p-2'>
-                    <div className='text-gray-400 capitalize'>sản phẩm mới thêm</div>
-                    <div className='mt-5'>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            className='w-11 h-11 object-cover'
-                            src='https://down-vn.img.susercontent.com/file/48e328926041273e572e8b3203f21dd8'
-                            alt='anh'
-                          />
+                  {purchasesInCart ? (
+                    <div className='p-2'>
+                      <div className='text-gray-400 capitalize'>sản phẩm mới thêm</div>
+                      <div className='mt-5'>
+                        {purchasesInCart.slice(0, 5).map((purchase) => {
+                          return (
+                            <div className='mt-2 py-2 hover:bg-gray-100 flex' key={purchase._id}>
+                              <div className='flex-shrink-0'>
+                                <img
+                                  className='w-11 h-11 object-cover'
+                                  src={purchase.product.image}
+                                  alt={purchase.product.name}
+                                />
+                              </div>
+                              <div className='flex-grow ml-2 overflow-hidden'>
+                                <p className='truncate'>{purchase.product.name}</p>
+                              </div>
+                              <div className='ml-2 flex-shrink-0'>
+                                <span className='text-orange'>₫{formatCurrency(purchase.price)}</span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        <div className='flex items-center justify-between mt-6'>
+                          <div className='text-gray-500 capitalize text-xs'>
+                            {purchasesInCart.length > 5 ? purchasesInCart.length - 5 : ''} thêm hàng vào giỏ
+                          </div>
+                          <Button className='bg-orange capitalize hover:opacity-90 text-white text-sm rounded-md px-4 py-3'>
+                            xem giỏ hàng
+                          </Button>
                         </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <p className='truncate'>Nước Hoa Hồng Ko Cồn Mamonde Rau Diếp Cá 250ML</p>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫185.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            className='w-11 h-11 object-cover'
-                            src='https://down-vn.img.susercontent.com/file/48e328926041273e572e8b3203f21dd8'
-                            alt='anh'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <p className='truncate'>Nước Hoa Hồng Ko Cồn Mamonde Rau Diếp Cá 250ML</p>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫185.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            className='w-11 h-11 object-cover'
-                            src='https://down-vn.img.susercontent.com/file/48e328926041273e572e8b3203f21dd8'
-                            alt='anh'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <p className='truncate'>Nước Hoa Hồng Ko Cồn Mamonde Rau Diếp Cá 250ML</p>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫185.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            className='w-11 h-11 object-cover'
-                            src='https://down-vn.img.susercontent.com/file/48e328926041273e572e8b3203f21dd8'
-                            alt='anh'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <p className='truncate'>Nước Hoa Hồng Ko Cồn Mamonde Rau Diếp Cá 250ML</p>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫185.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            className='w-11 h-11 object-cover'
-                            src='https://down-vn.img.susercontent.com/file/48e328926041273e572e8b3203f21dd8'
-                            alt='anh'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <p className='truncate'>Nước Hoa Hồng Ko Cồn Mamonde Rau Diếp Cá 250ML</p>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫185.000</span>
-                        </div>
-                      </div>
-                      <div className='flex items-center justify-between mt-6'>
-                        <div className='text-gray-500 capitalize text-xs'>30 thêm hàng vào giỏ</div>
-                        <Button className='bg-orange capitalize hover:opacity-90 text-white text-sm rounded-md px-4 py-3'>
-                          xem giỏ hàng
-                        </Button>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className='p-2'>
+                      <img
+                        src={noproduct}
+                        alt='no-purchase'
+                        className='w-[300px] h-[300px] flex items-center justify-center p-2'
+                      />
+                      <div className='mt-3 capitalize text-gray-300'>Chưa có sản phẩm</div>
+                    </div>
+                  )}
                 </div>
               }
             >
-              <Link to={path.home}>
+              <Link to={path.home} className='relative'>
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   fill='none'
@@ -274,6 +241,12 @@ export default function Header() {
                     d='M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z'
                   />
                 </svg>
+                <span
+                  className='absolute px-[9px] py-[1px] text-orange bg-white top-[-8px]
+                left-[17px] rounded-full text-sx'
+                >
+                  {purchasesInCart?.length}
+                </span>
               </Link>
             </Popover>
           </div>

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import DOMPurify from 'dompurify'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -8,6 +8,11 @@ import { ProductListConfig, Product as ProductType } from 'src/types/product.typ
 import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
 import Product from '../ProductList/components/Product'
 import QuantityController from 'src/components/QuantityController'
+import purchaseApi from 'src/apis/purchase.api'
+import { queryClient } from 'src/main'
+
+import { toast } from 'react-toastify'
+import { purchasesStatus } from 'src/constants/purchase'
 
 export default function ProductDetail() {
   // Lay nameId tren URL
@@ -61,6 +66,9 @@ export default function ProductDetail() {
     staleTime: 3 * 60 * 100
   })
 
+  // Tao purchasesMutation de them handle add to cart
+  const addToCartMutation = useMutation({ mutationFn: purchaseApi.addToCart })
+
   // handle active khi onClick
   const choseActive = (img: string) => {
     setActiveImg(img)
@@ -108,6 +116,21 @@ export default function ProductDetail() {
   // tao function handleBuyCount quan ly count quantity
   const handleBuyCount = (value: number) => {
     setBuyCount(value)
+  }
+
+  // handle add to cart
+  const addToCart = () => {
+    addToCartMutation.mutate(
+      { product_id: product?._id as string, buy_count: buyCount },
+      {
+        onSuccess: (data) => {
+          toast.success(data.data.message, { autoClose: 1000 })
+          queryClient.invalidateQueries({
+            queryKey: ['purchases', { status: purchasesStatus.inCart }]
+          })
+        }
+      }
+    )
   }
 
   // check product
@@ -217,7 +240,10 @@ export default function ProductDetail() {
                 <div className='ml-6 text-sm text-gray-500'>{product.quantity} sản phẩm có sẵn</div>
               </div>
               <div className='mt-8 flex items-center'>
-                <button className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'>
+                <button
+                  onClick={addToCart}
+                  className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'
+                >
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     fill='none'
