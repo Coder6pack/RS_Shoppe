@@ -3,51 +3,86 @@ import DOMPurify from 'dompurify'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
-import InputNumber from 'src/components/InputNumber'
 import ProductRating from 'src/components/ProductRating'
-import { Product } from 'src/types/product.type'
-import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
+import { ProductListConfig, Product as ProductType } from 'src/types/product.type'
+import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
+import Product from '../ProductList/components/Product'
+import QuantityController from 'src/components/QuantityController'
 
 export default function ProductDetail() {
-  const { id } = useParams()
+  // Lay nameId tren URL
+  const { nameId } = useParams()
+
+  // Lay Id qua nameId
+  const id = getIdFromNameId(nameId as string)
+
+  // Lay data qua API
   const { data: productDetailData } = useQuery({
     queryKey: ['productDetail', id],
     queryFn: () => productApi.getProduct(id as string)
   })
+
+  // Tao bien de rut gon data
   const product = productDetailData?.data.data
+
+  // Tao state khoi tao cho slide
   const [currentIndexImg, setCurrentIndexImg] = useState([0, 5])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentImg = useMemo(
     () => (product ? product.images.slice(...currentIndexImg) : []),
     [product, currentIndexImg]
   )
+  // tao state quan ly quantity product
+
+  const [buyCount, setBuyCount] = useState(1)
+
+  // Tao state de active vao anh
   const [activeImg, setActiveImg] = useState('')
 
   const imgRef = useRef<HTMLImageElement>(null)
 
+  // Chon anh dau tien khi load
   useEffect(() => {
     if (product && product.images.length > 0) {
       setActiveImg(product.images[0])
     }
   }, [product])
 
+  // Tao queryConfig de lay danh sach lien quan
+  const queryConfig: ProductListConfig = { limit: '20', page: '1', category: product?.category._id }
+
+  // Lay data cua danh sach lien quan qua API
+  const { data: productsData } = useQuery({
+    queryKey: ['products', queryConfig],
+    queryFn: () => {
+      return productApi.getProducts(queryConfig)
+    },
+    enabled: Boolean(product),
+    staleTime: 3 * 60 * 100
+  })
+
+  // handle active khi onClick
   const choseActive = (img: string) => {
     setActiveImg(img)
   }
 
+  // handle next Img khi onClick
   const next = () => {
-    if (currentIndexImg[1] < (product as Product).images.length) {
+    if (currentIndexImg[1] < (product as ProductType).images.length) {
       setCurrentIndexImg((prev) => {
         return [prev[0] + 1, prev[1] + 1]
       })
     }
   }
+
+  // handle prev Img khi onClick
   const prev = () => {
     if (currentIndexImg[0] > 0) {
       setCurrentIndexImg((prev) => [prev[0] - 1, prev[1] - 1])
     }
   }
 
+  // handle zoomImg khi mouseMove
   const handleZoom = (event: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     const image = imgRef.current as HTMLImageElement
     const rect = event.currentTarget.getBoundingClientRect()
@@ -65,9 +100,17 @@ export default function ProductDetail() {
     image.style.left = left + 'px'
   }
 
+  // handle remove zoomImg khi mouseLeave
   const handleRemoveZoom = () => {
     imgRef.current?.removeAttribute('style')
   }
+
+  // tao function handleBuyCount quan ly count quantity
+  const handleBuyCount = (value: number) => {
+    setBuyCount(value)
+  }
+
+  // check product
   if (!product) return null
   return (
     <div className='bg-gray-200 py-6'>
@@ -164,37 +207,13 @@ export default function ProductDetail() {
               {/* Show quantity ,plus and minus */}
               <div className='mt-8 flex items-center'>
                 <div className='capitalize text-gray-500'>số lượng</div>
-                <div className='ml-10 flex items-center'>
-                  <button className='flex h-8 w-8 items-center justify-center rounded-l-sm border border-gray-300 text-gray-600'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      strokeWidth={1.5}
-                      stroke='currentColor'
-                      className='w-4 h-4'
-                    >
-                      <path strokeLinecap='round' strokeLinejoin='round' d='M5 12h14' />
-                    </svg>
-                  </button>
-                  <InputNumber
-                    value={1}
-                    classNameInput='h-8 w-14 border-t border-b border-gray-300 p-1 text-center outline-none'
-                    classNameError='hidden'
-                  />
-                  <button className='flex h-8 w-8 items-center justify-center rounded-r-sm border border-gray-300 text-gray-600'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      strokeWidth={1.5}
-                      stroke='currentColor'
-                      className='w-4 h-4'
-                    >
-                      <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
-                    </svg>
-                  </button>
-                </div>
+                <QuantityController
+                  onDecrease={handleBuyCount}
+                  onIncrease={handleBuyCount}
+                  onType={handleBuyCount}
+                  value={buyCount}
+                  max={product.quantity}
+                />
                 <div className='ml-6 text-sm text-gray-500'>{product.quantity} sản phẩm có sẵn</div>
               </div>
               <div className='mt-8 flex items-center'>
@@ -223,15 +242,26 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      <div className='container'>
-        <div className='mt-8 bg-white p-4 shadow'>
-          <div className='rounded bg-gray-50 capitalize p-4 text-lg text-slate-700'>Mô tả sản phẩm</div>
-          <div
-            className='mx-4 mt-12 mb-4 text-sm leading-loose'
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(product.description)
-            }}
-          ></div>
+      <div className='mt-8'>
+        <div className='container'>
+          <div className='mt-8 bg-white p-4 shadow'>
+            <div className='rounded bg-gray-50 capitalize p-4 text-lg text-slate-700'>Mô tả sản phẩm</div>
+            <div
+              className='mx-4 mt-12 mb-4 text-sm leading-loose'
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(product.description)
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
+      <div className='mt-8'>
+        <div className='container'>
+          <div className='uppercase text-gray-400'>có thể bạn cũng thích</div>
+          <div className='mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3'>
+            {productsData &&
+              productsData.data.data.products.map((product) => <Product key={product._id} product={product} />)}
+          </div>
         </div>
       </div>
     </div>

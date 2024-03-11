@@ -15,7 +15,6 @@ export default function SortProductList({ queryConfig, pageSize }: Props) {
   const page = Number(queryConfig.page)
   const navigate = useNavigate()
 
-  console.log(pageSize)
   const isActiveSortBy = (sortByValue: Exclude<ProductListConfig['sort_by'], undefined>) => {
     return sort_by === sortByValue
   }
