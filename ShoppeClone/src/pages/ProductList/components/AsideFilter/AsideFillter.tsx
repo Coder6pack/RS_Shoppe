@@ -12,6 +12,7 @@ import { Schema, schema } from 'src/utils/rules'
 import { ObjectSchema } from 'yup'
 import RatingStart from '../RatingStart'
 import { omit } from 'lodash'
+// import InputV2 from 'src/components/InputV2'
 interface Props {
   categories: Category[]
   queryConfig: QueryConfig
@@ -152,6 +153,18 @@ export default function AsideFilter({ categories, queryConfig }: Props) {
                 )
               }}
             />
+            {/* <InputV2
+              control={control}
+              name='price_min'
+              type='number'
+              className='grow'
+              placeholder='Từ'
+              classNameError='hidden'
+              classNameInput='p-1 rounded-sm border border-gray-300 focus:border-gray-500 focus:shadow-sm w-full outline-none'
+              onChange={() => {
+                trigger('price_max')
+              }}
+            /> */}
 
             <div className='mx-2 mt-2 shrink-0'>-</div>
             <Controller
