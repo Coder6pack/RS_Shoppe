@@ -4,7 +4,6 @@ import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
-import Button from '../Button'
 import path from 'src/constants/path'
 import useQueryConfig from 'src/hooks/useQueryConfig'
 import { useForm } from 'react-hook-form'
@@ -15,6 +14,7 @@ import purchaseApi from 'src/apis/purchase.api'
 import noproduct from 'src/assets/images/no-product.png'
 import { formatCurrency } from 'src/utils/utils'
 import { purchasesStatus } from 'src/constants/purchase'
+import { queryClient } from 'src/main'
 type FormData = Pick<Schema, 'name'>
 
 const nameSchema = schema.pick(['name'])
@@ -28,6 +28,7 @@ export default function Header() {
     onSuccess: () => {
       setIsAuthenticated(false)
       setProfile(null)
+      queryClient.removeQueries({ queryKey: ['purchases', { status: purchasesStatus.inCart }] })
     }
   })
   const { register, handleSubmit } = useForm<FormData>({
@@ -40,7 +41,8 @@ export default function Header() {
   // get data of purchase when add to cart
   const { data: purchasesInCartData } = useQuery({
     queryKey: ['purchases', { status: purchasesStatus.inCart }],
-    queryFn: () => purchaseApi.getPurchases({ status: purchasesStatus.inCart })
+    queryFn: () => purchaseApi.getPurchases({ status: purchasesStatus.inCart }),
+    enabled: isAuthenticated
   })
   const purchasesInCart = purchasesInCartData?.data.data
   const handleLogout = () => {
@@ -207,26 +209,25 @@ export default function Header() {
                           <div className='text-gray-500 capitalize text-xs'>
                             {purchasesInCart.length > 5 ? purchasesInCart.length - 5 : ''} thêm hàng vào giỏ
                           </div>
-                          <Button className='bg-orange capitalize hover:opacity-90 text-white text-sm rounded-md px-4 py-3'>
+                          <Link
+                            to={path.cart}
+                            className='bg-orange capitalize hover:opacity-90 text-white text-sm rounded-md px-4 py-3'
+                          >
                             xem giỏ hàng
-                          </Button>
+                          </Link>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className='p-2'>
-                      <img
-                        src={noproduct}
-                        alt='no-purchase'
-                        className='w-[300px] h-[300px] flex items-center justify-center p-2'
-                      />
+                    <div className='p-2 w-[300px] h-[300px] flex items-center justify-center flex-col'>
+                      <img src={noproduct} alt='no-purchase' className='w-24 h-24 object-cover' />
                       <div className='mt-3 capitalize text-gray-300'>Chưa có sản phẩm</div>
                     </div>
                   )}
                 </div>
               }
             >
-              <Link to={path.home} className='relative'>
+              <Link to={path.cart} className='relative'>
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   fill='none'
@@ -241,12 +242,14 @@ export default function Header() {
                     d='M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z'
                   />
                 </svg>
-                <span
-                  className='absolute px-[9px] py-[1px] text-orange bg-white top-[-8px]
+                {purchasesInCart && (
+                  <span
+                    className='absolute px-[9px] py-[1px] text-orange bg-white top-[-8px]
                 left-[17px] rounded-full text-sx'
-                >
-                  {purchasesInCart?.length}
-                </span>
+                  >
+                    {purchasesInCart.length}
+                  </span>
+                )}
               </Link>
             </Popover>
           </div>
