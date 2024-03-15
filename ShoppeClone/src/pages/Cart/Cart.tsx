@@ -223,6 +223,7 @@ export default function Cart() {
                                     value !== (purchasesInCart as Purchase[])[index].buy_count
                                 )
                               }
+                              value={purchase.buy_count}
                               disabled={purchase.disable}
                             />
                           </div>
