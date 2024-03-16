@@ -65,7 +65,7 @@ export default function Header() {
               placement='bottom-end'
               renderPopover={
                 <div className='bg-white relative shadow-md text-lg rounded-sm border border-gray-200 max-w-[400px]'>
-                  {purchasesInCart ? (
+                  {purchasesInCart && purchasesInCart.length > 0 ? (
                     <div className='p-2'>
                       <div className='text-gray-400 capitalize'>sản phẩm mới thêm</div>
                       <div className='mt-5'>

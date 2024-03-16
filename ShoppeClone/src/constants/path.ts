@@ -1,8 +1,11 @@
 const path = {
   home: '/',
   login: '/login',
+  user: '/user',
   register: '/register',
-  profile: '/profile',
+  profile: '/user/profile',
+  changePassword: '/user/password',
+  historyPurchase: '/user/history',
   logout: '/logout',
   productDetail: ':nameId',
   cart: '/cart'

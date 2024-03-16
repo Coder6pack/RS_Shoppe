@@ -54,6 +54,9 @@ class Http {
           // dung de toast thong bao error
           toast.error(message)
         }
+        if (error.response?.status === HttpStatusCode.Unauthorized) {
+          clearLS()
+        }
         return Promise.reject(error)
       }
     )

@@ -2,14 +2,14 @@ import { Link } from 'react-router-dom'
 import Popover from '../Popover'
 import path from 'src/constants/path'
 import authApi from 'src/apis/auth.api'
-import { useMutation } from '@tanstack/react-query'
-import { queryClient } from 'src/main'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { purchasesStatus } from 'src/constants/purchase'
 import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
 
 export default function NavHeader() {
   const { isAuthenticated, setIsAuthenticated, setProfile, profile } = useContext(AppContext)
+  const queryClient = useQueryClient()
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
