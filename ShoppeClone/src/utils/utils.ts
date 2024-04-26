@@ -1,4 +1,6 @@
+import userImage from 'src/assets/images/user.svg'
 import axios, { AxiosError } from 'axios'
+import config from 'src/constants/config'
 import HttpStatusCode from 'src/constants/HttpStatusCode.enum'
 
 // tao ham de xu ly loi response tra ve
@@ -41,3 +43,5 @@ export const getIdFromNameId = (nameId: string) => {
   const arr = nameId.split('-i.')
   return arr[arr.length - 1]
 }
+
+export const getAvatarUrl = (avatarName?: string) => (avatarName ? `${config.baseUrl}images/${avatarName}` : userImage)

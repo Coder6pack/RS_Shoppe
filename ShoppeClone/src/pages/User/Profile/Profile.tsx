@@ -7,23 +7,39 @@ import { userSchema, UserSchema } from 'src/utils/rules'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import InputNumber from 'src/components/InputNumber'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { AppContext } from 'src/contexts/app.context'
 import { setProfileToLS } from 'src/utils/auth'
+import { getAvatarUrl, isAxiosUnprocessableEntityError } from 'src/utils/utils'
+import { ErrorResponse } from 'src/types/ultils.type'
 
 type FormData = Pick<UserSchema, 'name' | 'address' | 'phone' | 'date_of_birth' | 'avatar'>
+
+type FormDataError = Omit<FormData, 'date_of_birth'> & {
+  date_of_birth?: string
+}
 const profileSchema = userSchema.pick(['name', 'phone', 'address', 'date_of_birth', 'avatar'])
 
 export default function Profile() {
   const { setProfile } = useContext(AppContext)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File>()
+  const previewImage = useMemo(() => {
+    return file ? URL.createObjectURL(file) : ''
+  }, [file])
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: userApi.uploadAvatar
+  })
   const {
     register,
     control,
     formState: { errors },
     handleSubmit,
-    setValue
-    // setError
+    setValue,
+    watch,
+    setError
   } = useForm<FormData>({
     defaultValues: {
       name: '',
@@ -34,6 +50,8 @@ export default function Profile() {
     },
     resolver: yupResolver(profileSchema)
   })
+
+  const avatar = watch('avatar')
 
   const { data: profileData, refetch } = useQuery({
     queryKey: ['profile'],
@@ -55,14 +73,44 @@ export default function Profile() {
   }, [profile, setValue])
 
   const handleOnSubmit = handleSubmit(async (data) => {
-    if (data) {
+    try {
+      let avatarName = avatar
+      if (file) {
+        const form = new FormData()
+        form.append('image', file)
+        const uploadRes = await uploadAvatarMutation.mutateAsync(form)
+        avatarName = uploadRes.data.data
+        setValue('avatar', avatarName)
+      }
       const res = await updateProfileMutation.mutateAsync({ ...data, date_of_birth: data.date_of_birth?.toISOString() })
       refetch()
       setProfile(res.data.data)
       setProfileToLS(res.data.data)
       toast.success(res.data.message)
+    } catch (error) {
+      if (isAxiosUnprocessableEntityError<ErrorResponse<FormDataError>>(error)) {
+        const formError = error.response?.data.data
+        if (formError) {
+          // dung Object de tao vong lap cac key trong form error
+          Object.keys(formError).forEach((key) => {
+            setError(key as keyof FormDataError, {
+              message: formError[key as keyof FormDataError],
+              type: 'Server'
+            })
+          })
+        }
+      }
     }
   })
+
+  const handleOnClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileFromLocal = event.target.files?.[0]
+    setFile(fileFromLocal)
+  }
   return (
     <div className='rounded-sm bg-white px-2 md:px-7 pb-10 md:pb-20 shadow'>
       <div className='border-b border-gray-200 pb-20 py-6'>
@@ -142,13 +190,14 @@ export default function Profile() {
           <div className='flex flex-col items-center'>
             <div className='my-5 h-24 w-24'>
               <img
-                src='https://down-vn.img.susercontent.com/file/81062507f28572b13b414f009e8a10d0_tn'
+                src={previewImage || getAvatarUrl(avatar)}
                 alt='avatar_profile'
                 className='w-full h-full rounded-full object-cover'
               />
             </div>
-            <input className='hidden' type='file' accept='.jpg,.jpeg,.png' />
+            <input ref={fileInputRef} onChange={onFileChange} className='hidden' type='file' accept='.jpg,.jpeg,.png' />
             <button
+              onClick={handleOnClick}
               type='button'
               className='flex h-10 items-center justify-end rounded-sm border bg-white px-6 text-sm text-gray-600 shadow'
             >

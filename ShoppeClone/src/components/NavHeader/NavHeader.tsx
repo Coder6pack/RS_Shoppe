@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { purchasesStatus } from 'src/constants/purchase'
 import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
-import userImage from 'src/assets/images/user.svg'
+import { getAvatarUrl } from 'src/utils/utils'
 
 export default function NavHeader() {
   const { isAuthenticated, setIsAuthenticated, setProfile, profile } = useContext(AppContext)
@@ -84,7 +84,7 @@ export default function NavHeader() {
           }
         >
           <div className='w-6 h-6 flex-shrink-0 mr-2 ml-3'>
-            <img className='rounded-full w-full h-full object-cover' src={profile?.avatar || userImage} alt='avatar' />
+            <img className='rounded-full w-full h-full object-cover' src={getAvatarUrl(profile?.avatar)} alt='avatar' />
           </div>
           <div className='ml-1'>{profile?.name}</div>
         </Popover>
