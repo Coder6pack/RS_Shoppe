@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Input from 'src/components/Input'
 import DateSelect from '../components/DateSelect'
 import Button from 'src/components/Button'
@@ -13,6 +14,7 @@ import { AppContext } from 'src/contexts/app.context'
 import { setProfileToLS } from 'src/utils/auth'
 import { getAvatarUrl, isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { ErrorResponse } from 'src/types/ultils.type'
+import config from 'src/constants/config'
 
 type FormData = Pick<UserSchema, 'name' | 'address' | 'phone' | 'date_of_birth' | 'avatar'>
 
@@ -109,8 +111,13 @@ export default function Profile() {
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileFromLocal = event.target.files?.[0]
-    setFile(fileFromLocal)
+    if (fileFromLocal && (fileFromLocal.size >= config.maxSizeUploadAvatar || !fileFromLocal.type.includes('image'))) {
+      toast.error('Dung lượng tối đa là 1Mb,Định dạng: .JPEG, .PNG')
+    } else {
+      setFile(fileFromLocal)
+    }
   }
+
   return (
     <div className='rounded-sm bg-white px-2 md:px-7 pb-10 md:pb-20 shadow'>
       <div className='border-b border-gray-200 pb-20 py-6'>
@@ -195,7 +202,16 @@ export default function Profile() {
                 className='w-full h-full rounded-full object-cover'
               />
             </div>
-            <input ref={fileInputRef} onChange={onFileChange} className='hidden' type='file' accept='.jpg,.jpeg,.png' />
+            <input
+              onClick={(event) => {
+                ;(event.target as any).value = null
+              }}
+              ref={fileInputRef}
+              onChange={onFileChange}
+              className='hidden'
+              type='file'
+              accept='.jpg,.jpeg,.png'
+            />
             <button
               onClick={handleOnClick}
               type='button'
