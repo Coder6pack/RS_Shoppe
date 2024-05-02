@@ -1,20 +1,30 @@
-import React, { useContext } from 'react'
-import { Navigate, Outlet, useRoutes } from 'react-router-dom'
-import ProductList from './pages/ProductList'
-import RegisterLayout from './layouts/RegisterLayout'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import MainLayout from './layouts/MainLayout'
+import { useContext, lazy, Suspense } from 'react'
 import { AppContext } from './contexts/app.context'
+import { Navigate, Outlet, useRoutes } from 'react-router-dom'
 import path from './constants/path'
-import ProductDetail from './pages/ProductDetail'
-import Cart from './pages/Cart'
+import MainLayout from './layouts/MainLayout'
+import RegisterLayout from './layouts/RegisterLayout'
 import CartLayout from './layouts/CartLayout'
 import UserLayout from './pages/User/layout/UserLayout'
-import ChangePassword from './pages/User/ChangePassword'
-import HistoryPurchase from './pages/User/HistoryPurchase'
-import Profile from './pages/User/Profile'
-import NotFound from './pages/NotFound'
+// import Login from './pages/Login'
+// import ProductList from './pages/ProductList'
+// import Register from './pages/Register'
+// import ProductDetail from './pages/ProductDetail'
+// import Cart from './pages/Cart'
+// import ChangePassword from './pages/User/ChangePassword'
+// import HistoryPurchase from './pages/User/HistoryPurchase'
+// import Profile from './pages/User/Profile'
+// import NotFound from './pages/NotFound'
+
+const Login = lazy(() => import('./pages/Login'))
+const ProductList = lazy(() => import('./pages/ProductList'))
+const Register = lazy(() => import('./pages/Register'))
+const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const HistoryPurchase = lazy(() => import('./pages/User/HistoryPurchase'))
+const ChangePassword = lazy(() => import('./pages/User/HistoryPurchase'))
+const Profile = lazy(() => import('./pages/User/Profile'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const Cart = lazy(() => import('./pages/Cart'))
 
 function ProtectedRoutes() {
   const { isAuthenticated } = useContext(AppContext)
@@ -35,7 +45,9 @@ export default function useRootElement() {
       index: true,
       element: (
         <MainLayout>
-          <ProductList />
+          <Suspense>
+            <ProductList />
+          </Suspense>
         </MainLayout>
       )
     },
@@ -47,7 +59,9 @@ export default function useRootElement() {
           path: path.cart,
           element: (
             <CartLayout>
-              <Cart />
+              <Suspense>
+                <Cart />
+              </Suspense>
             </CartLayout>
           )
         },
@@ -61,15 +75,27 @@ export default function useRootElement() {
           children: [
             {
               path: path.profile,
-              element: <Profile />
+              element: (
+                <Suspense>
+                  <Profile />
+                </Suspense>
+              )
             },
             {
               path: path.changePassword,
-              element: <ChangePassword />
+              element: (
+                <Suspense>
+                  <ChangePassword />
+                </Suspense>
+              )
             },
             {
               path: path.historyPurchase,
-              element: <HistoryPurchase />
+              element: (
+                <Suspense>
+                  <HistoryPurchase />
+                </Suspense>
+              )
             }
           ]
         }
@@ -83,7 +109,9 @@ export default function useRootElement() {
           path: path.login,
           element: (
             <RegisterLayout>
-              <Login />
+              <Suspense>
+                <Login />
+              </Suspense>
             </RegisterLayout>
           )
         },
@@ -91,7 +119,9 @@ export default function useRootElement() {
           path: path.register,
           element: (
             <RegisterLayout>
-              <Register />
+              <Suspense>
+                <Register />
+              </Suspense>
             </RegisterLayout>
           )
         }
@@ -102,7 +132,9 @@ export default function useRootElement() {
       index: true,
       element: (
         <MainLayout>
-          <ProductDetail />
+          <Suspense>
+            <ProductDetail />
+          </Suspense>
         </MainLayout>
       )
     },
@@ -110,7 +142,9 @@ export default function useRootElement() {
       path: '*',
       element: (
         <MainLayout>
-          <NotFound />
+          <Suspense>
+            <NotFound />
+          </Suspense>
         </MainLayout>
       )
     }
