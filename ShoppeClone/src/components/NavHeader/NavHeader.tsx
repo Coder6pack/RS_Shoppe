@@ -68,10 +68,10 @@ export default function NavHeader() {
           className='flex items-center py-1 hover:text-gray-300 cursor-pointer flex-shrink-0'
           renderPopover={
             <div className='bg-white text-left relative shadow-md rounded-sm border border-gray-200'>
-              <Link to={path.home} className='w-full block py-3 px-5 hover:bg-slate-100 hover:text-cyan-500'>
+              <Link to={path.profile} className='w-full block py-3 px-5 hover:bg-slate-100 hover:text-cyan-500'>
                 Tài khoản của tôi
               </Link>
-              <Link to={path.home} className='w-full block py-3 px-5 hover:bg-slate-100 hover:text-cyan-500'>
+              <Link to={path.changePassword} className='w-full block py-3 px-5 hover:bg-slate-100 hover:text-cyan-500'>
                 Đơn mua
               </Link>
               <button

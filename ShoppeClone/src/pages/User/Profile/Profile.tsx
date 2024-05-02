@@ -8,13 +8,13 @@ import { userSchema, UserSchema } from 'src/utils/rules'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import InputNumber from 'src/components/InputNumber'
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { AppContext } from 'src/contexts/app.context'
 import { setProfileToLS } from 'src/utils/auth'
 import { getAvatarUrl, isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { ErrorResponse } from 'src/types/ultils.type'
-import config from 'src/constants/config'
+import InputFile from 'src/components/InputFile'
 
 type FormData = Pick<UserSchema, 'name' | 'address' | 'phone' | 'date_of_birth' | 'avatar'>
 
@@ -25,7 +25,6 @@ const profileSchema = userSchema.pick(['name', 'phone', 'address', 'date_of_birt
 
 export default function Profile() {
   const { setProfile } = useContext(AppContext)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File>()
   const previewImage = useMemo(() => {
     return file ? URL.createObjectURL(file) : ''
@@ -105,23 +104,13 @@ export default function Profile() {
     }
   })
 
-  const handleOnClick = () => {
-    fileInputRef.current?.click()
+  const handleOnChange = (file?: File) => {
+    setFile(file)
   }
-
-  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileFromLocal = event.target.files?.[0]
-    if (fileFromLocal && (fileFromLocal.size >= config.maxSizeUploadAvatar || !fileFromLocal.type.includes('image'))) {
-      toast.error('Dung lượng tối đa là 1Mb,Định dạng: .JPEG, .PNG')
-    } else {
-      setFile(fileFromLocal)
-    }
-  }
-
   return (
     <div className='rounded-sm bg-white px-2 md:px-7 pb-10 md:pb-20 shadow'>
       <div className='border-b border-gray-200 pb-20 py-6'>
-        <h1 className='text-lg font-medium capitalize text-gray-900'>Ho So Cua Toi</h1>
+        <h1 className='text-lg font-medium capitalize text-gray-900'>Hồ Sơ Của Tôi</h1>
         <div className='mt-1 text-sm text-gray-700'>Quan Ly Thong Tin Ho So De Bao Mat Tao Khoan</div>
       </div>
       <form onSubmit={handleOnSubmit} className='mt-8 flex flex-col-reverse md:flex-row md:items-start'>
@@ -202,23 +191,7 @@ export default function Profile() {
                 className='w-full h-full rounded-full object-cover'
               />
             </div>
-            <input
-              onClick={(event) => {
-                ;(event.target as any).value = null
-              }}
-              ref={fileInputRef}
-              onChange={onFileChange}
-              className='hidden'
-              type='file'
-              accept='.jpg,.jpeg,.png'
-            />
-            <button
-              onClick={handleOnClick}
-              type='button'
-              className='flex h-10 items-center justify-end rounded-sm border bg-white px-6 text-sm text-gray-600 shadow'
-            >
-              Chon anh
-            </button>
+            <InputFile onChange={handleOnChange} />
             <div className='mt-3 text-gray-600'>
               <div>Dung luong toi da 1MB</div>
               <div>Dinh dang: .JPEG, .PNG</div>
